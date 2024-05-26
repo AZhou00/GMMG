@@ -59,13 +59,17 @@ def mask_by_random_topk(rng, mask_len, probs, temperature=1.0):
 @flax.struct.dataclass
 class State:
   """Holds decoding state data."""
-  # The position of the decoding loop in the length dimension.
-  cur_index: jnp.DeviceArray  # scalar int32: current decoded length index
-  # The active sequence log probabilities and finished sequence scores.
-  cur_seqs: jnp.DeviceArray  # int32 [batch, seq_len]
-  rng: jnp.DeviceArray  # Sampling random state.
-  final_seqs: jnp.DeviceArray  # int32 [batch, num_iter, seq_len]
+  # # The position of the decoding loop in the length dimension.
+  # cur_index: jnp.DeviceArray  # scalar int32: current decoded length index
+  # # The active sequence log probabilities and finished sequence scores.
+  # cur_seqs: jnp.DeviceArray  # int32 [batch, seq_len]
+  # rng: jnp.DeviceArray  # Sampling random state.
+  # final_seqs: jnp.DeviceArray  # int32 [batch, num_iter, seq_len]
 
+  cur_index: jax.Array  # scalar int32: current decoded length index
+  cur_seqs: jax.Array  # int32 [batch, seq_len]
+  rng: jax.Array  # Sampling random state.
+  final_seqs: jax.Array  # int32 [batch, num_iter, seq_len]
 
 def state_init(init_indices, rng, num_iter, start_iter=0):
   """Initializes the decoding state data structure."""
