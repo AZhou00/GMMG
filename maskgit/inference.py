@@ -24,7 +24,6 @@ import matplotlib.patches as patches
 import numpy as np
 from PIL import ImageFilter, Image
 import requests
-import tensorflow.compat.v1 as tf
 
 from maskgit.nets import vqgan_tokenizer, maskgit_transformer
 from maskgit.configs import maskgit_class_cond_config
@@ -170,3 +169,34 @@ class ImageNet_class_conditional_generator():
         composit_mask = composit_mask.filter(ImageFilter.GaussianBlur(radius=self.maskgit_cf.image_size//16-1))
         composit_mask = np.float32(composit_mask)[:, :, np.newaxis] / 255.
         return outputs * composit_mask + (1-composit_mask) * imgs
+
+    def create_input_tokens_unconditional(self):
+        # Create blank masked tokens without class labels
+        blank_tokens = jnp.ones([self.maskgit_cf.eval_batch_size, self.transformer_block_size])
+        masked_tokens = self.maskgit_cf.transformer.mask_token_id * blank_tokens
+        return masked_tokens.astype(jnp.int32)
+    
+    def create_latent_mask_and_input_tokens_for_image_editing_unconditional(self, image, bbox):
+        imgs = self._create_input_batch(image)
+
+        # Encode the images into image tokens
+        image_tokens = self.tokenizer_model.apply(
+            self.tokenizer_variables,
+            {"image": imgs},
+            method=self.tokenizer_model.encode_to_indices,
+            mutable=False)
+        
+        # Create the masked tokens
+        latent_mask = np.zeros((self.maskgit_cf.eval_batch_size, self.maskgit_cf.image_size // 16, self.maskgit_cf.image_size // 16))
+        latent_t = max(0, bbox.top // 16 - 1)
+        latent_b = min(self.maskgit_cf.image_size // 16, bbox.height // 16 + bbox.top // 16 + 1)
+        latent_l = max(0, bbox.left // 16 - 1)
+        latent_r = min(self.maskgit_cf.image_size // 16, bbox.left // 16 + bbox.width // 16 + 1)
+        latent_mask[:, latent_t:latent_b, latent_l:latent_r] = 1
+
+        masked_tokens = (1 - latent_mask) * image_tokens + self.maskgit_cf.transformer.mask_token_id * latent_mask
+        masked_tokens = np.reshape(masked_tokens, [self.maskgit_cf.eval_batch_size, -1])
+
+        # Concatenate masked tokens only (no label tokens)
+        input_tokens = masked_tokens
+        return latent_mask, input_tokens.astype(jnp.int32)

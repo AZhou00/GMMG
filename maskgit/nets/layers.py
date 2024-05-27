@@ -29,7 +29,10 @@ Array = Any
 
 
 def _l2_normalize(x, axis=None, eps=1e-12):
-  """Normalizes along dimension `axis` using an L2 norm.
+  """
+  x / sqrt(sum(x_i**2) + eps)
+  
+  Normalizes along dimension `axis` using an L2 norm.
 
   This specialized function exists for numerical stability reasons.
 
