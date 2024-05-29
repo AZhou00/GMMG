@@ -23,8 +23,8 @@ from typing import Any
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
-from maskgit.gmmg.src import loss
-from maskgit.gmmg.src import layer
+from src import loss as loss_fn
+from src import layer
 import ml_collections
 
 
@@ -190,7 +190,7 @@ class VectorQuantizer(nn.Module):
         )
         codebook = jnp.asarray(codebook, dtype=self.dtype)
         distances = jnp.reshape(
-            loss.squared_euclidean_distance(
+            loss_fn.squared_euclidean_distance(
                 jnp.reshape(x, (-1, x.shape[-1])), codebook
             ),
             x.shape[:-1] + (codebook_size,),
@@ -208,7 +208,7 @@ class VectorQuantizer(nn.Module):
             entropy_loss = 0.0
             if self.config.vqvae.entropy_loss_ratio != 0:
                 entropy_loss = (
-                    loss.entropy_loss(
+                    loss_fn.entropy_loss(
                         -distances,
                         loss_type=self.config.vqvae.entropy_loss_type,
                         temperature=self.config.vqvae.entropy_temperature,
@@ -303,6 +303,6 @@ class VQVAE(nn.Module):
         return ids
 
     def __call__(self, input_dict):
-        quantized = self.encode(input_dict)
+        quantized, _ = self.encode(input_dict)
         outputs = self.decoder(quantized)
         return outputs
