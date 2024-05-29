@@ -1,17 +1,3 @@
-# Copyright 2022 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 r"""MaskGIT Tokenizer based on VQGAN.
 
 This tokenizer is a reimplementation of VQGAN [https://arxiv.org/abs/2012.09841]
@@ -125,7 +111,7 @@ class Decoder(nn.Module):
 
     config: ml_collections.ConfigDict
     train: bool
-    output_dim: int = 3
+    output_dim: int = 1
     dtype: Any = jnp.float32
 
     def setup(self):
@@ -261,7 +247,7 @@ class VQVAE(nn.Module):
         self.quantizer = VectorQuantizer(
             config=self.config, train=self.train, dtype=self.dtype
         )
-        output_dim = 3
+        output_dim = 1
         self.encoder = Encoder(config=self.config, train=self.train, dtype=self.dtype)
         self.decoder = Decoder(
             config=self.config,
@@ -303,6 +289,6 @@ class VQVAE(nn.Module):
         return ids
 
     def __call__(self, input_dict):
-        quantized, _ = self.encode(input_dict)
+        quantized, result_dict = self.encode(input_dict)
         outputs = self.decoder(quantized)
-        return outputs
+        return outputs, result_dict

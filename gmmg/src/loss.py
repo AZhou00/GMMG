@@ -1,6 +1,6 @@
 """Common losses used in training GANs and masked modeling."""
 
-from typing import Any, Optional
+from typing import Any
 import jax
 import jax.numpy as jnp
 

@@ -17,10 +17,11 @@
 import functools
 from typing import Any, Tuple
 
-import flax.linen as nn
 import jax
 from jax import lax
 import jax.numpy as jnp
+
+import flax.linen as nn
 
 PRNGKey = Any
 Shape = Tuple[int]
@@ -31,6 +32,7 @@ Array = Any
 def get_norm_layer(train, dtype, norm_type="BN"):
     """Normalization layer."""
     if norm_type == "BN":
+        raise NotImplementedError("BatchNorm requires separete training and inference functions to keep track of running statistics.")
         norm_fn = functools.partial(
             nn.BatchNorm,
             use_running_average=not train,
