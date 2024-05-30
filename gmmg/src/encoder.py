@@ -72,6 +72,7 @@ class Encoder(nn.Module):
         normalization -> activation -> 1x1 convolution to embedding_dim
         --------------------- end final block
 
+        output data with dimensions (batch, spatial_dims…, embedding_dim).
         """
         # settings
         norm_fn = layer.get_norm_layer(
